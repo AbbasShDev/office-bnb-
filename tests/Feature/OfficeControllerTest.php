@@ -8,6 +8,7 @@ use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Arr;
 use Tests\TestCase;
 
 class OfficeControllerTest extends TestCase {
@@ -25,7 +26,6 @@ class OfficeControllerTest extends TestCase {
 
         $response->assertOk();
         $response->assertJsonCount(3, 'data');
-
         $this->assertNotNull($response->json()['data'][0]['id']);
         $this->assertNotNull($response->json()['meta']);
         $this->assertNotNull($response->json()['links']);
@@ -54,13 +54,13 @@ class OfficeControllerTest extends TestCase {
     /**
      * @test
      */
-    public function itFilterByHosId()
+    public function itFilterByUserId()
     {
         Office::factory()->count(3)->create();
-        $host = User::factory()->create();
-        $office = Office::factory()->for($host)->create();
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
 
-        $response = $this->get('/api/offices?host_id=' . $host->id);
+        $response = $this->get('/api/offices?user_id=' . $user->id);
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
@@ -71,7 +71,7 @@ class OfficeControllerTest extends TestCase {
     /**
      * @test
      */
-    public function itFilterByUserId()
+    public function itFilterByVisitorId()
     {
         Office::factory()->count(3)->create();
         $user = User::factory()->create();
@@ -79,7 +79,7 @@ class OfficeControllerTest extends TestCase {
         Reservation::factory()->for(Office::factory())->create();
         Reservation::factory()->for($office)->for($user)->create();
 
-        $response = $this->get('/api/offices?user_id=' . $user->id);
+        $response = $this->get('/api/offices?visitor_id=' . $user->id);
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
@@ -179,5 +179,38 @@ class OfficeControllerTest extends TestCase {
         $this->assertIsArray($response->json()['data']['images']);
         $this->assertCount(1, $response->json()['data']['images']);
         $this->assertEquals($user->id, $response->json()['data']['user']['id']);
+    }
+
+    /**
+     * @test
+     */
+    public function itCreateOffice()
+    {
+        $user = User::factory()->createQuietly();
+        $tag1 = Tag::factory()->create();
+        $tag2 = Tag::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->postJson('/api/offices', [
+            'title'            => 'Office in Jeddah',
+            'description'      => 'This is description',
+            'lat'              => '21.494254054088756',
+            'lng'              => '39.19982639014518',
+            'address_line1'    => 'Address',
+            'price_per_day'    => 10_000,
+            'monthly_discount' => 5,
+            'tags'             => [$tag1->id, $tag2->id]
+        ]);
+
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.title', 'Office in Jeddah');
+        $response->assertJsonPath('data.approval_status', Office::APPROVAL_PENDING);
+        $response->assertJsonPath('data.user.id', $user->id);
+        $response->assertJsonCount(2, 'data.tags');
+        $this->assertDatabaseHas('offices', [
+            'title' => 'Office in Jeddah'
+        ]);
     }
 }
