@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\ImageResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,11 @@ class Office extends Model {
     public function user(): belongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function featuredImage(): belongsTo
+    {
+        return $this->belongsTo(Image::class);
     }
 
     public function reservations(): hasMany

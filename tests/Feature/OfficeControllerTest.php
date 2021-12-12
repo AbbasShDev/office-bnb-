@@ -71,7 +71,7 @@ class OfficeControllerTest extends TestCase {
 
         $this->actingAs($user);
 
-        $response = $this->get('/api/offices?user_id='.$user->id);
+        $response = $this->get('/api/offices?user_id=' . $user->id);
 
         $response->assertOk();
         $response->assertJsonCount(5, 'data');
@@ -338,6 +338,52 @@ class OfficeControllerTest extends TestCase {
         ]);
 
         Notification::assertSentTo($admin, OfficePendingApprovel::class);
+    }
+
+    /**
+     * @test
+     */
+    public function itUpdateTheFeaturedImageOfAnOffice()
+    {
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        $image = $office->images()->create([
+            'path' => 'images.jpg'
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/api/offices/' . $office->id, [
+            'featured_image_id' => $image->id,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.featured_image_id',$image->id);
+
+    }
+
+    /**
+     * @test
+     */
+    public function itDoesNotUpdateTheFeaturedImageThatBelongsToAnotherOffice()
+    {
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        $office2 = Office::factory()->for($user)->create();
+
+        $image = $office2->images()->create([
+            'path' => 'images.jpg'
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/api/offices/' . $office->id, [
+            'featured_image_id' => $image->id,
+        ]);
+
+        $response->assertUnprocessable()->assertInvalid('featured_image_id');
+
     }
 
     /**
