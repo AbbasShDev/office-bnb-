@@ -123,7 +123,7 @@ class OfficeImageControllerTest extends TestCase {
 
         $response = $this->delete("/api/offices/{$office->id}/image/{$image->id}");
 
-        $response->assertStatus(302);
+        $response->assertNotFound();
 
     }
 }
