@@ -25,7 +25,7 @@ class OfficeImageController extends Controller {
             'image' => ['required', 'file', 'max:5000', 'mimes:png,jpg']
         ]);
 
-        $path = $request->image->storePublicly('/', ['disk' => 'public']);
+        $path = $request->image->storePublicly('/');
 
         $image = $office->images()->create(['path' => $path]);
 
@@ -53,7 +53,7 @@ class OfficeImageController extends Controller {
             ValidationException::withMessages(['image' => 'You can not delete the featured image'])
         );
 
-        Storage::disk('public')->delete($image->path);
+        Storage::delete($image->path);
 
         $image->delete();
 

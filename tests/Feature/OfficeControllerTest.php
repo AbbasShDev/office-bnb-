@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class OfficeControllerTest extends TestCase {
@@ -359,7 +360,7 @@ class OfficeControllerTest extends TestCase {
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.featured_image_id',$image->id);
+            ->assertJsonPath('data.featured_image_id', $image->id);
 
     }
 
@@ -402,7 +403,36 @@ class OfficeControllerTest extends TestCase {
         $response->assertOk();
 
         $this->assertSoftDeleted($office);
+    }
 
+    /**
+     * @test
+     */
+    public function itCanDeleteAnOfficeWithItImages()
+    {
+        Storage::put('/office_image.jpg', 'empty');
+
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        $image1 = $office->images()->create([
+            'path' => 'image.jpg'
+        ]);
+        $image2 = $office->images()->create([
+            'path' => 'office_image.jpg'
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson('/api/offices/' . $office->id);
+
+        $response->assertOk();
+
+        $this->assertSoftDeleted($office);
+
+        $this->assertModelMissing($image1);
+        $this->assertModelMissing($image2);
+        Storage::assertMissing('/office_image.jpg');
     }
 
     /**
