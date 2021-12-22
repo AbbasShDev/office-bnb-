@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HostReservationsController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OfficeImageController;
 use App\Http\Controllers\TagController;
@@ -24,5 +25,8 @@ Route::delete('/offices/{office}/image/{image:id}', [OfficeImageController::clas
     ->middleware('auth:sanctum', 'verified');
 
 Route::get('/reservations', [UserReservationsController::class, 'index'])
+    ->middleware('auth:sanctum', 'verified');
+
+Route::get('/host/reservations', [HostReservationsController::class, 'index'])
     ->middleware('auth:sanctum', 'verified');
 

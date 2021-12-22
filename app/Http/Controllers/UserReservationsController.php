@@ -6,6 +6,7 @@ use App\Http\Resources\ReservationReseource;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 
 class UserReservationsController extends Controller {
 
@@ -16,6 +17,12 @@ class UserReservationsController extends Controller {
             Response::HTTP_FORBIDDEN
         );
 
+        $request->validate([
+            'office_id' => ['integer'],
+            'status'    => [Rule::in([Reservation::STATUS_ACTIVE, Reservation::STATUS_CANCELLED])],
+            'from_date' => ['date', 'required_with:to_date', 'before:to_date'],
+            'to_date'   => ['date', 'required_with:from_date', 'after:from_date'],
+        ]);
 
         $reservations = Reservation::query()
             ->where('user_id', auth()->id())
@@ -25,8 +32,10 @@ class UserReservationsController extends Controller {
                 fn($builder) => $builder->where('status', $request->status)
             )->when($request->from_date && $request->to_date,
                 function ($builder) use ($request) {
-                    $builder->whereBetween('start_date', [$request->from_date, $request->to_date])
-                        ->orWhereBetween('end_date', [$request->from_date, $request->to_date]);
+                    $builder->where(function ($q) use ($request) {
+                        $q->whereBetween('start_date', [$request->from_date, $request->to_date])
+                            ->orWhereBetween('end_date', [$request->from_date, $request->to_date]);
+                    });
                 }
             )
             ->with(['office', 'office.featuredImage'])
