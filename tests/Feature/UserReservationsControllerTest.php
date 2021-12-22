@@ -66,6 +66,10 @@ class UserReservationsControllerTest extends TestCase {
                 'start_date' => '2021-03-25',
                 'end_date'   => '2021-03-29',
             ],
+            [
+                'start_date' => '2021-03-01',
+                'end_date'   => '2021-04-15',
+            ],
 
         ]);
 
@@ -89,15 +93,15 @@ class UserReservationsControllerTest extends TestCase {
         ]);
 
 
-        $formDate = '2021-3-3';
-        $toDate = '2021-4-4';
+        $formDate = '2021-03-03';
+        $toDate = '2021-04-04';
 
         $this->actingAs($user);
 
         $response = $this->getJson("/api/reservations?from_date={$formDate}&to_date={$toDate}");
 
 
-        $response->assertOk()->assertJsonCount(3, 'data');
+        $response->assertOk()->assertJsonCount(4, 'data');
 
         $this->assertEquals($reservations->pluck('id')->toArray(), collect($response->json('data'))->pluck('id')->toArray());
     }

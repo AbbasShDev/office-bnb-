@@ -34,12 +34,7 @@ class HostReservationsController extends Controller {
             )->when($request->status,
                 fn($builder) => $builder->where('status', $request->status)
             )->when($request->from_date && $request->to_date,
-                function ($builder) use ($request) {
-                    $builder->where(function ($q) use ($request) {
-                        $q->whereBetween('start_date', [$request->from_date, $request->to_date])
-                            ->orWhereBetween('end_date', [$request->from_date, $request->to_date]);
-                    });
-                }
+                fn($builder) => $builder->betweenDates($request->from_date, $request->to_date)
             )
             ->with(['office', 'office.featuredImage'])
             ->paginate(20);

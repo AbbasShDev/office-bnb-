@@ -115,6 +115,18 @@ class HostReservationsControllerTest extends TestCase {
                 'start_date' => '2021-03-25',
                 'end_date'   => '2021-03-29',
             ],
+            [
+                'office_id'  => $office2->id,
+                'user_id'    => $user1->id,
+                'start_date' => '2021-02-29',
+                'end_date'   => '2021-04-20',
+            ],
+            [
+                'office_id'  => $office2->id,
+                'user_id'    => $user2->id,
+                'start_date' => '2021-03-01',
+                'end_date'   => '2021-04-15',
+            ],
 
         ]);
 
@@ -146,7 +158,7 @@ class HostReservationsControllerTest extends TestCase {
         $response = $this->getJson("/api/host/reservations?from_date={$formDate}&to_date={$toDate}");
 
 
-        $response->assertOk()->assertJsonCount(4, 'data');
+        $response->assertOk()->assertJsonCount(6, 'data');
 
         $this->assertEquals($reservations->pluck('id')->toArray(), collect($response->json('data'))->pluck('id')->toArray());
     }
